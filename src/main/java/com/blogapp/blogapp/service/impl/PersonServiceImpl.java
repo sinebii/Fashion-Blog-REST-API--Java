@@ -13,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import javax.servlet.http.HttpSession;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -50,33 +51,44 @@ public class PersonServiceImpl implements PersonService {
     }
 
     @Override
-    public ResponseEntity<List<PersonDto>> getAllPerson() {
-        List<Person> listOfPersons = personRepository.findAll();
-        List<PersonDto> listOfPersonsDto = new ArrayList<>();
-        for(Person pr:listOfPersons){
-            PersonDto personDto = personConverter.convertEntityToDto(pr);
-            listOfPersonsDto.add(personDto);
+    public ResponseEntity<List<PersonDto>> getAllPerson(HttpSession session) {
+        Person person = (Person) session.getAttribute("person");
+        if(person.getRole().equals("ADMIN")){
+            List<Person> listOfPersons = personRepository.findAll();
+            List<PersonDto> listOfPersonsDto = new ArrayList<>();
+            for(Person pr:listOfPersons){
+                PersonDto personDto = personConverter.convertEntityToDto(pr);
+                listOfPersonsDto.add(personDto);
+            }
+            return new ResponseEntity<>(listOfPersonsDto,HttpStatus.OK);
         }
-        return new ResponseEntity<>(listOfPersonsDto,HttpStatus.OK);
+        return null;
     }
 
     @Override
-    public PersonDto getPersonById(Long personId) {
+    public ResponseEntity<PersonDto> getPersonById(Long personId) {
         Person person = personRepository.findById(personId).orElseThrow(()->new ResourceNotFoundException("Person","id",personId));
-
-        return personConverter.convertEntityToDto(person);
+        return new ResponseEntity<>(personConverter.convertEntityToDto(person),HttpStatus.OK);
     }
 
     @Override
-    public PersonDto loginPerson(LoginDto loginDto) {
+    public ResponseEntity<String> loginPerson(LoginDto loginDto, HttpSession session) {
         Optional<Person> person = personRepository.findByEmail(loginDto.getEmail());
         if(person.isPresent()){
             Person loggedInPerson = person.get();
             if(loggedInPerson.getPassword().equals(loginDto.getPassword())){
-                return personConverter.convertEntityToDto(loggedInPerson);
+                session.setAttribute("person",loggedInPerson);
+                return new ResponseEntity<>("Login was successful",HttpStatus.OK);
             }
         }
         return null;
+    }
+
+    @Override
+    public ResponseEntity<String> logOut(HttpSession session) {
+        Person person = (Person) session.getAttribute("person");
+        session.invalidate();
+        return new ResponseEntity<>(person.getName()+" has successfully logged out",HttpStatus.OK);
     }
 
 

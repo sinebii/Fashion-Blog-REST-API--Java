@@ -2,7 +2,6 @@ package com.blogapp.blogapp.service.impl;
 
 import com.blogapp.blogapp.dataconverter.CommentConverter;
 import com.blogapp.blogapp.dto.CommentDto;
-import com.blogapp.blogapp.dto.PostDto;
 import com.blogapp.blogapp.entity.Comment;
 import com.blogapp.blogapp.entity.Person;
 import com.blogapp.blogapp.entity.Post;
@@ -12,8 +11,11 @@ import com.blogapp.blogapp.repository.PersonRepository;
 import com.blogapp.blogapp.repository.PostRepository;
 import com.blogapp.blogapp.service.CommentService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import javax.servlet.http.HttpSession;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -30,33 +32,43 @@ public class CommentServiceImpl implements CommentService {
     private CommentConverter commentConverter;
 
     @Override
-    public CommentDto createComment(Long postId, Long personId,CommentDto commentDto) {
-        Comment comment = commentConverter.convertDtoToEntity(commentDto);
+    public ResponseEntity<String> createComment(Long postId, CommentDto commentDto, HttpSession session) {
+        Person loggedPerson = (Person) session.getAttribute("person");
+        if(loggedPerson!=null){
+            Comment comment = commentConverter.convertDtoToEntity(commentDto);
 
-        Post post = postRepository.findById(postId).orElseThrow(()->new ResourceNotFoundException("Post","id",postId));
-        Person person = personRepository.findById(personId).orElseThrow(()->new ResourceNotFoundException("Post","id",personId));
-        comment.setPostId(post.getId());
-        comment.setPersonId(person.getId());
-        Comment newComment = commentRepository.save(comment);
-        CommentDto commentDto1 = commentConverter.convertEntityToDto(newComment);
+            Post post = postRepository.findById(postId).orElseThrow(()->new ResourceNotFoundException("Post","id",postId));
+            Person person = personRepository.findById(loggedPerson.getId()).orElseThrow(()->new ResourceNotFoundException("Post","id",loggedPerson.getId()));
+            comment.setPostId(post.getId());
+            comment.setPersonId(person.getId());
+            commentRepository.save(comment);
+            return  new ResponseEntity<>("The operation was successful", HttpStatus.CREATED);
+        }
 
-        return commentDto1;
+        return new ResponseEntity<>("Access Denied", HttpStatus.CREATED);
     }
 
     @Override
-    public List<CommentDto> getCommentsByPostId(Long postId) {
-        List<Comment> comments = commentRepository.findByPostId(postId);
-        return comments.stream().map(comment->commentConverter.convertEntityToDto(comment)).collect(Collectors.toList());
+    public ResponseEntity<List<CommentDto>> getCommentsByPostId(Long postId, HttpSession session) {
+        Person person = (Person) session.getAttribute("person");
+        if(person!=null){
+            List<Comment> comments = commentRepository.findByPostId(postId);
+            return new ResponseEntity<>(comments.stream().map(comment->commentConverter.convertEntityToDto(comment)).collect(Collectors.toList()),HttpStatus.OK);
+        }
+       return  null;
     }
 
     @Override
-    public CommentDto editComment(Long commentId, CommentDto commentDto, Long personId, Long postId) {
-        Comment comment = commentRepository.findCommentByIdAndPersonIdAndPostId(commentId,personId,postId);
-        comment.setMessage(commentDto.getMessage());
-        Comment updatedComment = commentRepository.save(comment);
-        CommentDto updatedCommentDto = commentConverter.convertEntityToDto(updatedComment);
-        return updatedCommentDto;
+    public ResponseEntity<CommentDto> editComment(Long commentId, CommentDto commentDto, Long postId, HttpSession session) {
+        Person person = (Person) session.getAttribute("person");
+        if(person!=null){
+            Comment comment = commentRepository.findCommentByIdAndPersonIdAndPostId(commentId,person.getId(),postId);
+            comment.setMessage(commentDto.getMessage());
+            Comment updatedComment = commentRepository.save(comment);
+            return  new ResponseEntity<>(commentConverter.convertEntityToDto(updatedComment),HttpStatus.OK);
+        }
 
+        return null;
     }
 
 }

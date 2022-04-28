@@ -22,9 +22,12 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+import static java.util.Optional.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -74,11 +77,18 @@ public class PersonServiceTests {
 
     @Test
     public void shouldEditAAUser(){
-        Mockito.when(personRepository.findById(1L)).thenReturn(Optional.of(person));
+        Mockito.when(personRepository.findById(1L)).thenReturn(of(person));
         when(personRepository.save(person)).thenReturn(person);
         when(personConverter.convertEntityToDto(person)).thenReturn(personDto);
         ResponseEntity<PersonDto> responseEntity =  personService.editPerson(1L, personDto);
         Assertions.assertThat(Objects.requireNonNull(responseEntity.getBody()).getName()).isEqualTo("Sinebi Innazo");
+    }
+
+    @Test
+    public void shouldGetAllUsers(){
+        java.util.List<Person> personList = new ArrayList<>();
+        Mockito.when(personRepository.findAll()).thenReturn(personList);
+
     }
 
 

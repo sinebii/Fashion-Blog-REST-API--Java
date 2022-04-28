@@ -1,12 +1,14 @@
 package com.blogapp.blogapp.service;
 
 import com.blogapp.blogapp.dto.CommentDto;
+import org.springframework.http.ResponseEntity;
 
+import javax.servlet.http.HttpSession;
 import java.util.List;
 
 public interface CommentService {
 
-    CommentDto createComment(Long post,Long person, CommentDto commentDto);
-    List<CommentDto > getCommentsByPostId(Long postId);
-    CommentDto editComment(Long commentId, CommentDto commentDto, Long id,Long postId);
+    ResponseEntity<String> createComment(Long post, CommentDto commentDto, HttpSession session);
+    ResponseEntity<List<CommentDto >> getCommentsByPostId(Long postId,HttpSession session);
+    ResponseEntity<CommentDto> editComment(Long commentId, CommentDto commentDto,Long postId,HttpSession session);
 }

@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.servlet.http.HttpSession;
+
 @RestController
 @RequestMapping("/blog/post")
 public class CategoryController {
@@ -18,10 +20,7 @@ public class CategoryController {
 
     // create a new Category
     @PostMapping("/create-category")
-    public ResponseEntity<CategoryDto> createCategory(@RequestBody CategoryDto categoryDto){
-
-        CategoryDto categoryDto1 = categoryService.createCategory(categoryDto);
-        ResponseEntity<CategoryDto> responseEntity = new ResponseEntity<>(categoryDto1, HttpStatus.CREATED);
-        return  responseEntity;
+    public ResponseEntity<CategoryDto> createCategory(@RequestBody CategoryDto categoryDto, HttpSession session){
+       return categoryService.createCategory(categoryDto, session);
     }
 }

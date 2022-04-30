@@ -26,10 +26,6 @@ public class PersonServiceImpl implements PersonService {
    @Autowired
     private PersonConverter personConverter;
 
-//    public PersonServiceImpl(PersonRepository personRepository) {
-//        this.personRepository = personRepository;
-//
-//    }
 
     @Override
     public ResponseEntity<PersonDto> creatPerson(PersonDto personDto) {
@@ -52,6 +48,7 @@ public class PersonServiceImpl implements PersonService {
 
     @Override
     public ResponseEntity<List<PersonDto>> getAllPerson(HttpSession session) {
+
         Person person = (Person) session.getAttribute("person");
         if(person.getRole().equals("ADMIN")){
             List<Person> listOfPersons = personRepository.findAll();

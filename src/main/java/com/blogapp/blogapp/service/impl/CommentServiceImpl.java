@@ -38,7 +38,10 @@ public class CommentServiceImpl implements CommentService {
             Comment comment = commentConverter.convertDtoToEntity(commentDto);
 
             Post post = postRepository.findById(postId).orElseThrow(()->new ResourceNotFoundException("Post","id",postId));
+
             Person person = personRepository.findById(loggedPerson.getId()).orElseThrow(()->new ResourceNotFoundException("Post","id",loggedPerson.getId()));
+
+
             comment.setPostId(post.getId());
             comment.setPersonId(person.getId());
             commentRepository.save(comment);

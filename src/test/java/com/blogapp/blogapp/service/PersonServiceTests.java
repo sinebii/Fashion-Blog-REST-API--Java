@@ -1,6 +1,7 @@
 package com.blogapp.blogapp.service;
 
 import com.blogapp.blogapp.dataconverter.PersonConverter;
+import com.blogapp.blogapp.dto.LoginDto;
 import com.blogapp.blogapp.dto.PersonDto;
 import com.blogapp.blogapp.entity.Person;
 import com.blogapp.blogapp.repository.PersonRepository;
@@ -22,6 +23,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import javax.servlet.http.HttpSession;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -42,6 +44,10 @@ public class PersonServiceTests {
     private PersonConverter personConverter;
     Person person;
     PersonDto personDto;
+    LoginDto loginDto;
+    
+    @Mock
+    private HttpSession session;
     @BeforeEach
     public void setup(){
 
@@ -54,10 +60,14 @@ public class PersonServiceTests {
 
         person = new Person();
         person.setId(1L);
-        person.setName("Ebube");
+        person.setName("CUSTOMER");
         person.setEmail("ebube@yahoo.com");
-        person.setRole("CUSTOMER");
+        person.setRole("ADMIN");
         person.setPassword("12345");
+
+        loginDto = new LoginDto();
+        loginDto.setEmail("innazo@yahoo.com");
+        loginDto.setPassword("1234567");
 
 
     }
@@ -84,12 +94,34 @@ public class PersonServiceTests {
         Assertions.assertThat(Objects.requireNonNull(responseEntity.getBody()).getName()).isEqualTo("Sinebi Innazo");
     }
 
+
+
     @Test
-    public void shouldGetAllUsers(){
-        java.util.List<Person> personList = new ArrayList<>();
-        Mockito.when(personRepository.findAll()).thenReturn(personList);
+    void canGetAllCustomers() {
+        List<Person> personList = List.of(new Person(2L, "Chisom","sinebi.innazo@yahoo.com", "CUSTOMER", "1234"));
+        when(personRepository.findAll()).thenReturn(personList);
+        when(session.getAttribute("person")).thenReturn(person);
+        ResponseEntity<List<PersonDto>> response = personService.getAllPerson(session);
+        Assertions.assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        Assertions.assertThat(Objects.requireNonNull(response.getBody()).size()).isEqualTo(personList.size());
+    }
+
+    @Test
+    void shouldGetOnePersonById(){
+        Mockito.when(personRepository.findById(1L)).thenReturn(of(person));
+        when(personConverter.convertEntityToDto(person)).thenReturn(personDto);
+        ResponseEntity<PersonDto> responseEntity =  personService.getPersonById(1L);
+        Assertions.assertThat(Objects.requireNonNull(responseEntity.getBody()).getName()).isEqualTo("Sinebi Innazo");
 
     }
+
+//    @Test
+//    void shouldFindPersonByEmailAndPassword(){
+//        Mockito.when(personRepository.findById(1L)).thenReturn(of(person));
+//        when(personConverter.convertEntityToDto(person)).thenReturn(personDto);
+//        ResponseEntity<String> responseEntity =  personService.loginPerson(loginDto,session);
+//        
+//    }
 
 
 }
